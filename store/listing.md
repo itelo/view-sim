@@ -40,6 +40,19 @@ Copy-paste text for the Chrome Web Store, Firefox Add-ons (AMO) and Microsoft Ed
 
 **Privacy policy URL:** https://github.com/itelo/view-sim/blob/main/PRIVACY.md
 
+## Images
+
+| File | Caption (Firefox asks for one per screenshot) |
+| --- | --- |
+| `images/screenshot-1-devices.png` | Your site on a MacBook, an iPad and an iPhone at the same time, side by side. |
+| `images/screenshot-2-browsers.png` | Pick Safari, Chrome or Firefox per device, with that browser's real bars and user agent. |
+| `images/screenshot-3-transparent.png` | Save transparent PNG screenshots of the device with its frame, the screen, or just the page. |
+| `images/screenshot-4-mcp.png` | An optional MCP server lets AI agents like Claude Code open pages on devices and check the layout. |
+| `images/screenshot-5-popup.png` | Turn it on per site from the toolbar. view-sim asks for access only to that site and collects no data. |
+| `images/promo-small-440x280.png` | Chrome "Small promo tile" / Edge "Small promotional tile". |
+| `images/promo-marquee-1400x560.png` | Chrome "Marquee promo tile" / Edge "Large promotional tile" (optional). |
+| `../extension/icons/icon128.png` | Store icon (128×128), if a store asks for one separately. The source is `../extension/icons/logo.svg`. |
+
 ## Chrome Web Store
 
 Upload the zip at https://chrome.google.com/webstore/devconsole (one-time $5 developer fee).
