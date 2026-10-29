@@ -1,0 +1,21 @@
+name: Device request
+description: Ask for a phone, tablet, laptop or display to be added
+labels: [device]
+body:
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      placeholder: Galaxy Z Fold 6 (folded)
+    validations:
+      required: true
+  - type: textarea
+    id: specs
+    attributes:
+      label: Screen details
+      description: CSS viewport size, pixel ratio and anything special (notch, punch hole, rounded corners). A link to a spec page is fine.
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters
+      description: Optional. For example, a big share of your users have it.

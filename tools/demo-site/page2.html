@@ -1,0 +1,28 @@
+<!doctype html>
+<!-- A plain page to try the extension on: serve the project root and open /tools/demo-site/. -->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#4f46e5" />
+    <title>Demo site</title>
+    <style>
+      body { margin: 0; font: 16px/1.5 system-ui, sans-serif; color: #1e1b4b; }
+      header { background: #4f46e5; color: #fff; padding: 20px; }
+      main { padding: 20px; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+      .card { background: #eef2ff; border-radius: 14px; padding: 16px; min-height: 120px; }
+      code { font-size: 12px; word-break: break-all; }
+    </style>
+  </head>
+  <body>
+    <header><strong>Page 2</strong> · <a href="index.html" style="color:#fff">home</a></header>
+    <main>
+      <div class="card"><code id="ua"></code></div>
+      <div class="card">Card 2</div><div class="card">Card 3</div><div class="card">Card 4</div>
+      <div class="card">Card 5</div><div class="card">Card 6</div><div class="card">Card 7</div>
+    </main>
+    <script>
+      document.getElementById("ua").textContent = `${innerWidth}×${innerHeight} · touch=${"ontouchstart" in window} · ${navigator.userAgent}`;
+    </script>
+  </body>
+</html>

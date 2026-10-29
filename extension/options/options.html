@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>view-sim settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1><span class="light">view-</span><span class="bold">sim</span> settings</h1>
+
+      <section>
+        <h2>Default devices</h2>
+        <p class="hint">Used the first time the simulator opens on a website. Each site then remembers its own devices.</p>
+        <div id="devices" class="device-grid"></div>
+      </section>
+
+      <section>
+        <h2>Defaults</h2>
+        <label class="field">
+          Zoom
+          <select id="zoom">
+            <option value="fit">Fit to window</option>
+            <option value="0.5">50%</option>
+            <option value="0.75">75%</option>
+            <option value="1">100%</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="frame" /> Show device frame</label>
+        <label class="check"><input type="checkbox" id="syncNav" /> Keep devices on the same page when one navigates</label>
+      </section>
+
+      <section>
+        <h2>MCP bridge</h2>
+        <p class="hint">Lets the view-sim MCP server (<code>npx view-sim-mcp</code>) drive the simulator: open sites, pick devices and take screenshots.</p>
+        <label class="check"><input type="checkbox" id="bridge" /> Connect to the MCP server on ws://127.0.0.1:47820</label>
+        <p class="hint">Status: <strong id="bridge-status">checking…</strong></p>
+      </section>
+
+      <section id="all-sites" hidden>
+        <h2>Screenshots</h2>
+        <p class="hint">Browsers only let an extension capture a tab when it can access all websites. Without this, view-sim only gets access to the sites you turn it on for.</p>
+        <button id="grant-all" class="primary">Allow access to all websites</button>
+      </section>
+
+      <section>
+        <h2>Websites with the simulator on</h2>
+        <ul id="hosts" class="hosts"></ul>
+        <p id="no-hosts" class="hint" hidden>None yet. Turn it on from the toolbar popup.</p>
+      </section>
+
+      <p id="status" class="status" aria-live="polite"></p>
+
+      <footer class="foot">
+        view-sim is free and open source.
+        <a class="support" href="https://github.com/sponsors/itelo" target="_blank" rel="noopener"><span class="heart" aria-hidden="true">♥</span> Support view-sim</a>
+      </footer>
+    </main>
+    <script src="../shared/devices.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

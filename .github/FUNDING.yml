@@ -1,0 +1,6 @@
+# Shows a "Sponsor" button on the GitHub repo. GitHub Sponsors needs to be set up for the account
+# first (https://github.com/sponsors). Uncomment a line below and fill in a handle to add more.
+github: [itelo]
+# ko_fi: your-kofi-handle
+# buy_me_a_coffee: your-bmc-handle
+# custom: ["https://example.com/donate"]

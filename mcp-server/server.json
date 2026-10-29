@@ -1,0 +1,28 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.itelo/view-sim",
+  "title": "view-sim",
+  "description": "See a site on phones, tablets and laptops in Safari, Chrome, Firefox or Zen frames; PNG screenshots.",
+  "repository": {
+    "url": "https://github.com/itelo/view-sim",
+    "source": "github",
+    "subfolder": "mcp-server"
+  },
+  "websiteUrl": "https://github.com/itelo/view-sim",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "view-sim-mcp",
+      "version": "1.0.0",
+      "transport": { "type": "stdio" },
+      "environmentVariables": [
+        {
+          "name": "VIEW_SIM_EXTENSION_IDS",
+          "description": "Comma-separated extension ids allowed to connect to the bridge (Chrome id and/or view-sim@itelo). Unset allows any extension.",
+          "isRequired": false
+        }
+      ]
+    }
+  ]
+}

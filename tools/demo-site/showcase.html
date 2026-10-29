@@ -1,0 +1,105 @@
+<!doctype html>
+<!-- A made-up coffee roaster's landing page, used for the README and store screenshots
+     (tools/store-images.mjs). Responsive on purpose, so every device shows a different layout. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1f3a2e" />
+    <title>Fernway Coffee</title>
+    <style>
+      * { box-sizing: border-box; }
+      :root { --ink: #1c2420; --green: #1f3a2e; --cream: #f6efe4; --clay: #c8643b; --muted: #5d6b63; }
+      body { margin: 0; font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--cream); }
+      a { color: inherit; }
+
+      .nav { display: flex; align-items: center; gap: 28px; padding: 16px 20px; background: var(--green); color: #f6efe4; }
+      .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; letter-spacing: -0.3px; }
+      .brand i { width: 26px; height: 26px; border-radius: 50% 50% 50% 8px; background: var(--clay); display: block; }
+      .links { display: none; gap: 24px; font-size: 15px; opacity: 0.85; }
+      .links a { text-decoration: none; }
+      .nav .cta { margin-left: auto; padding: 8px 14px; border-radius: 999px; background: #f6efe4; color: var(--green); font-weight: 700; font-size: 14px; text-decoration: none; }
+      .menu { margin-left: 12px; width: 22px; height: 14px; border-block: 2px solid currentColor; position: relative; }
+      .menu::after { content: ""; position: absolute; inset: 4px 0 auto; border-top: 2px solid currentColor; }
+
+      .hero { padding: 40px 20px 36px; background: var(--green); color: #f6efe4; display: grid; gap: 28px; }
+      .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #e9a27f; }
+      h1 { margin: 8px 0 14px; font-size: 38px; line-height: 1.08; letter-spacing: -1px; }
+      .hero p { margin: 0 0 22px; font-size: 17px; color: #d8dfd9; max-width: 34em; }
+      .buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+      .button { padding: 12px 20px; border-radius: 999px; font-weight: 700; text-decoration: none; }
+      .button.primary { background: var(--clay); color: #fff; }
+      .button.ghost { border: 1.5px solid #6f8a7c; color: #f6efe4; }
+      .art { position: relative; min-height: 220px; border-radius: 28px; background: radial-gradient(circle at 30% 30%, #f0c9a5, #c8643b 55%, #7a3218); overflow: hidden; }
+      .art::before { content: ""; position: absolute; width: 58%; aspect-ratio: 1; left: 21%; top: 16%; border-radius: 50%; background: radial-gradient(circle at 50% 45%, #5a2f1a 0 38%, #f6efe4 39% 47%, transparent 48%); }
+      .art::after { content: "Single origin · Huila, Colombia"; position: absolute; left: 16px; bottom: 14px; padding: 6px 12px; border-radius: 999px; background: rgba(28, 36, 32, 0.75); color: #fff; font-size: 13px; }
+
+      section { padding: 36px 20px; }
+      h2 { margin: 0 0 18px; font-size: 26px; letter-spacing: -0.5px; }
+      .grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
+      .card { background: #fff; border-radius: 20px; padding: 16px; box-shadow: 0 1px 2px rgba(28, 36, 32, 0.06); }
+      .swatch { height: 120px; border-radius: 14px; margin-bottom: 12px; }
+      .card h3 { margin: 0; font-size: 18px; }
+      .card p { margin: 4px 0 10px; color: var(--muted); font-size: 14px; }
+      .price { display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+      .price span { font-size: 13px; padding: 5px 12px; border-radius: 999px; background: var(--cream); }
+      .s1 { background: linear-gradient(135deg, #e9a27f, #8b3a1d); }
+      .s2 { background: linear-gradient(135deg, #b9cbb0, #2f5a44); }
+      .s3 { background: linear-gradient(135deg, #f3d9a4, #b4772c); }
+      .s4 { background: linear-gradient(135deg, #d6c1e0, #5b3f6e); }
+
+      .band { display: grid; gap: 16px; background: #fff; }
+      .stat strong { display: block; font-size: 30px; color: var(--clay); letter-spacing: -0.5px; }
+      .stat { color: var(--muted); font-size: 14px; }
+
+      @media (min-width: 700px) {
+        .nav { padding: 18px 40px; }
+        .links { display: flex; }
+        .menu { display: none; }
+        .hero { grid-template-columns: 1.1fr 1fr; align-items: center; padding: 64px 40px; gap: 40px; }
+        h1 { font-size: 52px; }
+        section { padding: 48px 40px; }
+        .grid { grid-template-columns: repeat(2, 1fr); }
+        .band { grid-template-columns: repeat(3, 1fr); }
+        .art { min-height: 320px; }
+      }
+      @media (min-width: 1100px) {
+        .hero, section { padding-inline: max(40px, calc((100% - 1180px) / 2)); }
+        .nav { padding-inline: max(40px, calc((100% - 1180px) / 2)); }
+        h1 { font-size: 64px; }
+        .grid { grid-template-columns: repeat(4, 1fr); }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <span class="brand"><i></i>Fernway</span>
+      <span class="links"><a href="#">Shop</a><a href="#">Subscriptions</a><a href="#">Our farms</a><a href="#">Cafés</a></span>
+      <a class="cta" href="#">Cart · 2</a>
+      <span class="menu" aria-hidden="true"></span>
+    </nav>
+    <header class="hero">
+      <div>
+        <div class="eyebrow">New harvest</div>
+        <h1>Coffee that tastes like where it grew.</h1>
+        <p>Small-lot beans, roasted on Tuesdays and at your door by Friday. Pause or skip whenever you like.</p>
+        <div class="buttons"><a class="button primary" href="#">Start a subscription</a><a class="button ghost" href="#">Shop beans</a></div>
+      </div>
+      <div class="art" role="img" aria-label="A cup of coffee"></div>
+    </header>
+    <section>
+      <h2>This week's roasts</h2>
+      <div class="grid">
+        <article class="card"><div class="swatch s1"></div><h3>Huila Sunrise</h3><p>Red apple, panela, cocoa</p><div class="price">$18 <span>Add</span></div></article>
+        <article class="card"><div class="swatch s2"></div><h3>Yirgacheffe</h3><p>Jasmine, lemon, black tea</p><div class="price">$21 <span>Add</span></div></article>
+        <article class="card"><div class="swatch s3"></div><h3>House Espresso</h3><p>Caramel, hazelnut, orange</p><div class="price">$16 <span>Add</span></div></article>
+        <article class="card"><div class="swatch s4"></div><h3>Decaf Night Owl</h3><p>Plum, brown sugar, malt</p><div class="price">$17 <span>Add</span></div></article>
+      </div>
+    </section>
+    <section class="band">
+      <div class="stat"><strong>12</strong>partner farms in 5 countries</div>
+      <div class="stat"><strong>72 h</strong>from roaster to your door</div>
+      <div class="stat"><strong>100%</strong>compostable bags</div>
+    </section>
+  </body>
+</html>

@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mcp-server/package-lock.json
+      - name: Lint the extension
+        run: npx -y web-ext@8 lint --source-dir extension
+      - name: Install the MCP server
+        working-directory: mcp-server
+        run: npm ci
+      - name: Install Chromium for Playwright
+        working-directory: mcp-server
+        run: npx playwright install --with-deps chromium
+      - name: Render devices headlessly
+        run: node tools/smoke-test.mjs
+      - name: Check the npm package is self-contained
+        working-directory: mcp-server
+        run: |
+          npm pack --dry-run --json > pack.json
+          node -e '
+            const files = require("./pack.json")[0].files.map((f) => f.path);
+            for (const needed of ["index.mjs", "headless.mjs", "vendor/render.html", "vendor/shared/devices.js", "vendor/simulator/simulator.js", "vendor/simulator/simulator.css"])
+              if (!files.includes(needed)) { console.error("missing from package:", needed); process.exit(1); }
+            if (files.some((f) => f.startsWith("node_modules/"))) { console.error("node_modules in package"); process.exit(1); }
+            console.log(files.length, "files ok");
+          '

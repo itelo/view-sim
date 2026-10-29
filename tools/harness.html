@@ -1,0 +1,64 @@
+<!doctype html>
+<!-- Dev harness: runs the simulator outside Chrome's extension runtime with chrome.* stubbed.
+     Serve the extension folder over http (python3 -m http.server) and open /tools/harness.html. -->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>Harness site</title>
+    <script>
+      if (window.top === window) {
+        const store = {};
+        window.chrome = {
+          storage: { local: { get: async () => store, set: async (values) => Object.assign(store, values) } },
+          runtime: {
+            sendMessage: async (message) => {
+              console.log("sendMessage", message);
+              return { ok: false, error: "no background page in the harness" };
+            },
+            onMessage: { addListener: (listener) => (window.__mfsimListener = listener) },
+          },
+        };
+        // Lets a test drive the content script the way the background page does.
+        window.__mfsimSend = (message) => new Promise((resolve) => window.__mfsimListener(message, {}, resolve));
+        const version = Date.now();
+        document.write(`<script src="../extension/shared/devices.js?v=${version}"><\/script><script src="../extension/simulator/simulator.js?v=${version}"><\/script>`);
+        // The extension injects the CSS as a content-script stylesheet; here it has to be added
+        // after simulator.js has replaced the document.
+        const waitForSimulator = setInterval(() => {
+          if (!document.body?.classList.contains("mf-app")) return;
+          clearInterval(waitForSimulator);
+          const link = document.createElement("link");
+          link.rel = "stylesheet";
+          link.href = `../extension/simulator/simulator.css?v=${Date.now()}`;
+          document.head.append(link);
+        }, 10);
+      } else {
+        document.write(`<script src="../extension/frame/frame-main.js?v=${Date.now()}"><\/script>`);
+      }
+    </script>
+    <style>
+      body { margin: 0; font: 16px/1.5 system-ui, sans-serif; }
+      header { background: #0f766e; color: #fff; padding: 16px; position: sticky; top: 0; }
+      section { padding: 16px; }
+      .card { background: #f1f5f9; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+      @media (min-width: 600px) { .card { display: inline-block; width: 45%; margin-right: 2%; } }
+    </style>
+  </head>
+  <body>
+    <header><strong>Harness site</strong></header>
+    <section>
+      <p id="ua"></p>
+      <p><a href="#second">Go to #second</a> · <a href="harness.html?page=2">Navigate to page 2</a></p>
+      <div class="card">Card 1</div><div class="card">Card 2</div><div class="card">Card 3</div>
+      <div class="card">Card 4</div><div class="card">Card 5</div><div class="card">Card 6</div>
+      <div class="card" id="second">Second anchor</div><div class="card">Card 8</div>
+      <div class="card">Card 9</div><div class="card">Card 10</div>
+    </section>
+    <script>
+      document.getElementById("ua").textContent =
+        `${navigator.userAgent} | touch: ${"ontouchstart" in window} | coarse: ${matchMedia("(pointer: coarse)").matches} | ${screen.width}×${screen.height}@${devicePixelRatio} | page=${new URLSearchParams(location.search).get("page") ?? 1}`;
+    </script>
+  </body>
+</html>

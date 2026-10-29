@@ -1,0 +1,502 @@
+/* Injected only into the top document of an enabled host, after simulator.js has emptied it. */
+:root {
+  --mf-bg: #15171c;
+  --mf-panel: #1d2027;
+  --mf-border: #2c3039;
+  --mf-text: #e7e9ee;
+  --mf-muted: #8d95a3;
+  --mf-accent: #3d8ef7;
+  --mf-danger: #f26d6d;
+  color-scheme: dark;
+  background: var(--mf-bg) !important;
+}
+
+html,
+body.mf-app {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  background: var(--mf-bg) !important;
+}
+
+body.mf-app {
+  color: var(--mf-text);
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+body.mf-app *,
+body.mf-app *::before,
+body.mf-app *::after {
+  box-sizing: border-box;
+}
+
+/* ---- toolbar ---- */
+.mf-toolbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: var(--mf-panel);
+  border-bottom: 1px solid var(--mf-border);
+  z-index: 10;
+}
+
+.mf-brand { display: flex; gap: 0; font-size: 15px; margin-right: 6px; white-space: nowrap; }
+.mf-brand-light { color: var(--mf-muted); }
+.mf-brand-bold { color: var(--mf-accent); font-weight: 700; }
+.mf-nav { display: flex; gap: 2px; }
+
+.mf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mf-text);
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mf-btn:hover { background: rgba(255, 255, 255, 0.07); }
+.mf-btn:focus-visible,
+.mf-select:focus-visible,
+.mf-url:focus { outline: 2px solid var(--mf-accent); outline-offset: -1px; }
+
+.mf-btn-toggle { border-color: var(--mf-border); color: var(--mf-muted); }
+.mf-btn-toggle[aria-pressed="true"] { color: var(--mf-accent); border-color: rgba(61, 142, 247, 0.5); background: rgba(61, 142, 247, 0.12); }
+.mf-btn-off { color: var(--mf-danger); border-color: rgba(242, 109, 109, 0.4); }
+.mf-btn-off:hover { background: rgba(242, 109, 109, 0.12); }
+.mf-btn-small { height: 26px; min-width: 26px; padding: 0 4px; color: var(--mf-muted); }
+.mf-btn-small:hover { color: var(--mf-text); }
+
+.mf-url {
+  flex: 1;
+  min-width: 120px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--mf-border);
+  border-radius: 8px;
+  background: #121419;
+  color: var(--mf-text);
+  font: inherit;
+}
+
+.mf-select {
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--mf-border);
+  border-radius: 8px;
+  background: #121419;
+  color: var(--mf-text);
+  font: inherit;
+  cursor: pointer;
+}
+.mf-add { color: var(--mf-accent); }
+
+.mf-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 20px);
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: #2a2e37;
+  color: var(--mf-text);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms, transform 160ms;
+  z-index: 20;
+}
+.mf-toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
+.mf-toast.is-error { background: #4a2326; color: #ffd9d9; }
+
+/* ---- stage ---- */
+.mf-stage {
+  position: fixed;
+  inset: 52px 0 0 0;
+  overflow: auto;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0) 0 0 / 22px 22px,
+    var(--mf-bg);
+}
+
+.mf-stage-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 48px;
+  width: max-content;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+/* While a screenshot is taken, one device is shown alone and centred. The background page captures it
+   once on black and once on white; the difference between the two is each pixel's transparency. */
+body.mf-capturing .mf-toolbar,
+body.mf-capturing .mf-toast,
+body.mf-capturing .mf-card-head,
+body.mf-capturing .mf-card:not(.is-capture-target) { display: none; }
+body.mf-capturing .mf-stage { inset: 0; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+body.mf-capturing.mf-capture-white .mf-stage { background: #fff; }
+body.mf-capturing .mf-stage-inner { margin: 0; padding: 24px; }
+
+/* Drop shadows would be cut off at the crop, so captures keep only the bezel's outline rings. */
+body.mf-capturing .mf-device { box-shadow: inset 0 0 0 2px #2b2f37, 0 0 0 1px #000, 0 0 0 3px #3b404a; }
+body.mf-capturing .mf-type-laptop .mf-device { box-shadow: inset 0 0 0 2px #2a2b2f, 0 0 0 3px #a7a9ae; }
+body.mf-capturing .mf-type-imac .mf-device { box-shadow: 0 0 0 1px #cfd8e2; }
+body.mf-capturing .mf-type-monitor .mf-device { box-shadow: inset 0 0 0 1px #2c2d31, 0 0 0 1px #000; }
+body.mf-capturing .mf-laptop-base,
+body.mf-capturing .mf-stand-foot { box-shadow: none; }
+
+/* "screen" captures: the display only, with its rounded corners, no bezel or stand. */
+body.mf-capture-screen .mf-device { background: transparent !important; box-shadow: none !important; }
+body.mf-capture-screen .mf-laptop-base,
+body.mf-capture-screen .mf-stand,
+body.mf-capture-screen .mf-speaker,
+body.mf-capture-screen .mf-home-button,
+body.mf-capture-screen .mf-monitor-logo { display: none; }
+
+/* Headless rendering (MCP server): the page itself is transparent, so no matting is needed. */
+html.mf-render-root,
+html.mf-render-root body.mf-app,
+html.mf-render-root body.mf-capturing .mf-stage { background: transparent !important; }
+
+.mf-card { display: flex; flex-direction: column; }
+
+.mf-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  margin-bottom: 12px;
+  color: var(--mf-muted);
+  opacity: 0.75;
+  transition: opacity 120ms;
+}
+.mf-card:hover .mf-card-head,
+.mf-card.is-active .mf-card-head { opacity: 1; }
+.mf-card.is-active .mf-device-select { color: var(--mf-accent); }
+
+.mf-device-select,
+.mf-browser-select {
+  border: 0;
+  background: transparent;
+  color: var(--mf-text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 0;
+  max-width: 170px;
+}
+.mf-browser-select { color: var(--mf-muted); font-weight: 500; }
+.mf-device-select option,
+.mf-device-select optgroup,
+.mf-browser-select option { background: var(--mf-panel); color: var(--mf-text); }
+.mf-dims { font-variant-numeric: tabular-nums; font-size: 12px; white-space: nowrap; }
+.mf-spacer { flex: 1; }
+
+.mf-scaler { position: relative; flex: none; }
+
+/* ---- device body ---- */
+.mf-device {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  background: #0a0b0d;
+  box-shadow: inset 0 0 0 2px #2b2f37, 0 0 0 1px #000, 0 0 0 3px #3b404a, 0 28px 60px rgba(0, 0, 0, 0.5);
+}
+.mf-stage.is-bare .mf-device { background: transparent; box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45); }
+
+.mf-screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #fff;
+  isolation: isolate;
+  color: #1d1d1f;
+  font: 15px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+.mf-top,
+.mf-bottom { flex: none; display: flex; flex-direction: column; overflow: hidden; }
+.mf-middle { flex: none; display: flex; }
+.mf-side[hidden] { display: none; }
+.mf-side { flex: none; overflow: hidden; }
+.mf-wrap { flex: 1; display: flex; min-width: 0; }
+
+.mf-iframe { display: block; flex: none; border: 0; background: #fff; }
+
+/* ---- shared browser-chrome parts ---- */
+.mf-bar { flex: none; display: flex; align-items: center; gap: 14px; padding: 0 14px; color: #3a3a3c; background: #f6f6f8; }
+.mf-glyph { display: inline-flex; flex: none; align-items: center; justify-content: center; }
+.mf-pill {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: #e5e5ea;
+  color: #1d1d1f;
+  font-size: 15px;
+}
+.mf-addr,
+.mf-tab-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mf-aa { font-size: 12px; font-weight: 600; letter-spacing: -0.5px; flex: none; }
+.mf-tabcount {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid currentColor;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.mf-traffic { display: inline-flex; flex: none; gap: 8px; margin-right: 6px; }
+.mf-traffic i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; }
+.mf-traffic i:nth-child(2) { background: #febc2e; }
+.mf-traffic i:nth-child(3) { background: #28c840; }
+.mf-favicon { flex: none; width: 14px; height: 14px; border-radius: 4px; background: linear-gradient(135deg, #7aa7ff, #3d8ef7); }
+.mf-tool-row { display: flex; align-items: center; justify-content: space-around; flex: 1; width: 100%; }
+
+/* ---- mobile status bar ---- */
+.mf-statusbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  background: #fff;
+  color: #000;
+  font-size: 15px;
+  font-weight: 600;
+  user-select: none;
+}
+.mf-os-ios .mf-statusbar { padding-top: 6px; }
+.mf-os-android .mf-statusbar { padding: 0 20px; font-size: 13px; font-weight: 500; }
+.mf-type-tablet .mf-statusbar { font-size: 12px; padding: 0 22px; }
+.mf-status-icons { display: inline-flex; align-items: center; gap: 5px; }
+.mf-type-tablet .mf-status-icons svg { transform: scale(0.85); }
+
+/* ---- iOS Safari: address bar and toolbar at the bottom ---- */
+.mf-ios-safari-bottom {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 8px 0 0;
+  background: rgba(246, 246, 248, 0.97);
+  border-top: 1px solid #d8d8dc;
+  color: #0a84ff;
+}
+.mf-ios-safari-bottom .mf-pill-row { display: flex; padding: 0 12px; }
+.mf-ios-safari-bottom .mf-pill { height: 44px; border-radius: 13px; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12); }
+.mf-ios-safari-bottom .mf-pill .mf-glyph,
+.mf-ios-safari-bottom .mf-aa { color: #1d1d1f; }
+
+/* iOS Chrome / Firefox: address on top, toolbar at the bottom */
+.mf-ios-top { padding: 0 12px 8px; align-items: flex-end; background: #f6f6f8; border-bottom: 1px solid #e0e0e4; }
+.mf-ios-top .mf-pill { height: 40px; border-radius: 20px; justify-content: flex-start; }
+.mf-ios-toolbar { flex-direction: column; padding: 0; background: #f6f6f8; border-top: 1px solid #e0e0e4; }
+.mf-ios-toolbar .mf-tool-row { height: 49px; flex: none; }
+.mf-b-firefox.mf-ios-top,
+.mf-b-firefox.mf-ios-toolbar { background: #f9f9fb; color: #15141a; }
+.mf-b-firefox .mf-pill { background: #ececf0; }
+
+/* iPad Safari: one row on top */
+.mf-ipad-safari { background: #f6f6f8; border-bottom: 1px solid #e0e0e4; color: #0a84ff; }
+.mf-ipad-safari .mf-pill { flex: 0 1 420px; margin: 0 auto; height: 34px; border-radius: 10px; color: #1d1d1f; }
+
+/* Compact rows: landscape phones and Chrome/Firefox on iPad */
+.mf-compact { background: #f6f6f8; border-bottom: 1px solid #e0e0e4; }
+.mf-compact .mf-pill { height: 34px; border-radius: 10px; }
+.mf-os-ios .mf-compact.mf-b-safari { color: #0a84ff; }
+.mf-os-ios .mf-compact.mf-b-safari .mf-pill { color: #1d1d1f; }
+
+/* Android */
+.mf-android-chrome-top { gap: 12px; background: #fff; color: #444746; border-bottom: 1px solid #eceef1; }
+.mf-android-chrome-top .mf-pill { height: 44px; border-radius: 22px; justify-content: flex-start; background: #edf2fa; color: #1f1f1f; font-size: 16px; }
+.mf-android-firefox-bottom { flex-direction: column; padding: 0; background: #f9f9fb; color: #15141a; border-top: 1px solid #e3e3e7; }
+.mf-android-firefox-bottom .mf-urlrow { height: 56px; flex: none; gap: 12px; padding: 0 12px; justify-content: flex-start; }
+.mf-android-firefox-bottom .mf-pill { height: 40px; border-radius: 8px; justify-content: flex-start; background: #ececf0; }
+.mf-android-nav { padding: 0; background: #fff; }
+.mf-gesture { flex: none; width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; }
+.mf-gesture i { width: 108px; height: 4px; border-radius: 2px; background: #1f1f1f; }
+.mf-android-nav,
+.mf-android-firefox-bottom .mf-gesture { background: inherit; }
+
+/* Hardware cut-outs sit over the status bar, never over page content. */
+.mf-cutout { position: absolute; top: 0; left: 50%; transform: translateX(-50%); background: #000; z-index: 2; pointer-events: none; }
+.mf-cutout-island { top: 11px; width: 124px; height: 36px; border-radius: 20px; }
+.mf-cutout-notch { width: 162px; height: 32px; border-radius: 0 0 20px 20px; }
+.mf-cutout-punch { top: 10px; width: 13px; height: 13px; border-radius: 50%; }
+.mf-cutout-macnotch { width: 190px; height: 32px; border-radius: 0 0 12px 12px; }
+.mf-card.is-landscape .mf-cutout,
+.mf-stage.is-bare .mf-cutout { display: none; }
+
+.mf-home-indicator {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 134px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.82);
+  z-index: 2;
+  pointer-events: none;
+}
+.mf-card.is-landscape .mf-home-indicator { width: 200px; }
+.mf-type-tablet .mf-home-indicator { width: 300px; }
+.mf-stage.is-bare .mf-home-indicator { display: none; }
+
+/* iPhone SE: speaker grille and home button live in the bezel. */
+.mf-speaker,
+.mf-home-button { position: absolute; pointer-events: none; }
+.mf-speaker { top: 34px; left: 50%; width: 56px; height: 6px; margin-left: -28px; border-radius: 3px; background: #23262d; }
+.mf-home-button { bottom: 11px; left: 50%; width: 50px; height: 50px; margin-left: -25px; border-radius: 50%; border: 2px solid #2d3139; }
+.mf-card.is-landscape .mf-speaker { top: 50%; left: 34px; width: 6px; height: 56px; margin: -28px 0 0 0; }
+.mf-card.is-landscape .mf-home-button { bottom: auto; top: 50%; left: auto; right: 11px; margin: -25px 0 0 0; }
+.mf-stage.is-bare .mf-speaker,
+.mf-stage.is-bare .mf-home-button { display: none; }
+
+/* ---- desktops: macOS menu bar and browser windows ---- */
+.mf-menubar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 18px;
+  background: rgba(232, 232, 236, 0.96);
+  color: #1d1d1f;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.mf-menubar strong { font-weight: 700; }
+.mf-menubar-dot { flex: none; width: 12px; height: 12px; border-radius: 50%; background: #1d1d1f; }
+.mf-menubar svg { flex: none; }
+
+.mf-desk { flex: none; display: flex; flex-direction: column; font-size: 13px; }
+.mf-desk .mf-bar { gap: 12px; }
+.mf-desk .mf-pill { height: 30px; border-radius: 8px; font-size: 13px; }
+
+.mf-desk-safari { flex-direction: row; background: #f6f6f6; border-bottom: 1px solid #d6d6d8; color: #6e6e73; }
+.mf-desk-safari .mf-pill { flex: 0 1 560px; margin: 0 auto; background: #e8e8ea; }
+
+.mf-desk-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 240px;
+  height: 100%;
+  padding: 0 10px;
+  font-size: 12px;
+  color: #1f1f1f;
+}
+.mf-desk-tab .mf-tab-title { flex: 1; }
+
+.mf-desk-chrome .mf-tabstrip { background: #dfe3e7; padding-bottom: 0; align-items: flex-end; color: #444746; }
+.mf-desk-chrome .mf-tabstrip > .mf-traffic { align-self: center; }
+.mf-desk-chrome .mf-tabstrip > .mf-glyph { align-self: center; }
+.mf-desk-chrome .mf-desk-tab { height: 30px; border-radius: 10px 10px 0 0; background: #fff; }
+.mf-desk-chrome .mf-navbar { background: #fff; color: #444746; border-bottom: 1px solid #e3e5e8; }
+.mf-desk-chrome .mf-pill { justify-content: flex-start; border-radius: 16px; background: #eef1f4; }
+.mf-avatar { flex: none; width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #f6b26b, #e06666); }
+
+.mf-desk-firefox .mf-tabstrip { background: #f0f0f4; color: #15141a; }
+.mf-desk-firefox .mf-desk-tab { height: 30px; border-radius: 6px; background: #fff; box-shadow: 0 0 4px rgba(0, 0, 0, 0.18); }
+.mf-desk-firefox .mf-navbar { background: #f9f9fb; color: #15141a; border-bottom: 1px solid #e0e0e6; }
+.mf-desk-firefox .mf-pill { justify-content: flex-start; border-radius: 4px; background: #f0f0f4; border: 1px solid #e0e0e6; }
+
+/* Zen: vertical tabs in a sidebar; the page sits in a rounded card. */
+.mf-screen[data-browser="zen"] .mf-middle { background: linear-gradient(160deg, #e7e2f3, #d9e3f2); }
+.mf-screen[data-browser="zen"] .mf-iframe { border-radius: 10px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 2px 10px rgba(0, 0, 0, 0.12); }
+.mf-zen { display: flex; flex-direction: column; gap: 10px; height: 100%; padding: 12px 10px 10px 14px; color: #3b3a44; font-size: 13px; }
+.mf-zen-row { display: flex; align-items: center; gap: 10px; height: 24px; }
+.mf-zen .mf-pill { flex: none; height: 34px; justify-content: flex-start; border-radius: 10px; background: rgba(255, 255, 255, 0.55); font-size: 13px; }
+.mf-zen-essentials { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.mf-zen-essentials i { height: 44px; border-radius: 10px; background: rgba(255, 255, 255, 0.45); }
+.mf-zen-label { margin-top: 6px; color: #7c7a88; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.mf-zen-tab { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px; border-radius: 9px; }
+.mf-zen-tab.is-active { background: rgba(255, 255, 255, 0.75); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+.mf-zen-workspaces { display: flex; justify-content: center; gap: 10px; }
+.mf-zen-workspaces i { width: 7px; height: 7px; border-radius: 50%; background: #a9a6b8; }
+.mf-zen-workspaces i.is-active { background: #5a5770; }
+
+/* ---- desktops: bodies ---- */
+.mf-type-laptop .mf-device { background: #0c0c0e; box-shadow: inset 0 0 0 2px #2a2b2f, 0 0 0 3px #a7a9ae, 0 40px 80px rgba(0, 0, 0, 0.5); }
+.mf-laptop-base {
+  position: absolute;
+  top: 100%;
+  border-radius: 2px 2px 40px 40px / 2px 2px 14px 14px;
+  background: linear-gradient(#e4e5e8 0%, #c9cbcf 35%, #8e9095 100%);
+  box-shadow: 0 30px 50px rgba(0, 0, 0, 0.45);
+}
+.mf-laptop-base::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 14%;
+  height: 40%;
+  transform: translateX(-50%);
+  border-radius: 0 0 14px 14px;
+  background: linear-gradient(#a6a8ad, #c4c6ca);
+}
+
+.mf-type-imac .mf-device {
+  background: linear-gradient(to bottom, #f5f5f7 calc(100% - var(--mf-chin)), #b9d2ea calc(100% - var(--mf-chin)));
+  box-shadow: 0 0 0 1px #cfd8e2, 0 40px 80px rgba(0, 0, 0, 0.45);
+}
+.mf-type-imac .mf-screen { box-shadow: 0 0 0 1px #d9d9dc; }
+
+.mf-type-monitor .mf-device { background: #111214; box-shadow: inset 0 0 0 1px #2c2d31, 0 0 0 1px #000, 0 40px 80px rgba(0, 0, 0, 0.5); }
+.mf-monitor-logo {
+  position: absolute;
+  bottom: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #8b8d93;
+  font: 700 13px/1 system-ui, sans-serif;
+  letter-spacing: 2px;
+  pointer-events: none;
+}
+
+.mf-stand { position: absolute; top: 100%; display: flex; flex-direction: column; align-items: center; z-index: -1; pointer-events: none; }
+.mf-stand-neck { flex: 1; width: 20%; }
+.mf-stand-foot { flex: none; height: 18px; width: 30%; border-radius: 4px; }
+.mf-type-imac .mf-stand-neck { background: linear-gradient(#9fb8d1, #c2d7ec 30%, #b2c9e0); }
+.mf-type-imac .mf-stand-foot { background: #b9d2ea; box-shadow: 0 16px 30px rgba(0, 0, 0, 0.4); }
+.mf-type-monitor .mf-stand-neck { width: 9%; background: linear-gradient(90deg, #2a2b2f, #4a4c52, #2a2b2f); }
+.mf-type-monitor .mf-stand-foot { width: 24%; height: 22px; border-radius: 6px 6px 3px 3px; background: linear-gradient(#55575d, #2c2d31); box-shadow: 0 16px 30px rgba(0, 0, 0, 0.45); }
+
+.mf-stage.is-bare .mf-laptop-base,
+.mf-stage.is-bare .mf-stand,
+.mf-stage.is-bare .mf-monitor-logo { display: none; }
+
+@media (max-width: 900px) {
+  .mf-btn-toggle span,
+  .mf-btn-off span,
+  .mf-brand { display: none; }
+}
