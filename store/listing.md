@@ -8,17 +8,17 @@ Copy-paste text for the Chrome Web Store, Firefox Add-ons (AMO) and Microsoft Ed
 
 **Summary** (Chrome allows 132 characters, AMO 250):
 
-> See your site on iPhone, Pixel, iPad, MacBook and big displays side by side, in Safari, Chrome, Firefox or Zen, with PNG screenshots.
+> Preview your site on phones, tablets, laptops and large displays side by side, with real browser bars and transparent screenshots.
 
-**Description:**
+**Description** (no lists of device or brand names: Chrome rejected that as keyword spam):
 
-> view-sim shows any website on real device sizes, side by side, right inside the browser you already use, with your logins, extensions and dev tools.
+> view-sim shows any website on a row of simulated devices — phones, tablets, laptops and large displays — side by side, inside the browser you already use, with your logins, extensions and dev tools.
 >
-> DEVICES
-> iPhone 15 Pro, 15 Pro Max, 13 mini and SE · Pixel 8 · Galaxy S23 · iPad mini · iPad Pro 11" · MacBook Pro 14" and 16" · iMac 24" · Dell UltraSharp 40" ultrawide. Each device gets the page area that's really left after its status bar and browser bars, so iPhone 15 Pro in Safari is 393 × 659, just like the phone.
+> REAL SCREEN SIZES
+> Each device gets the page area that's really left after its status bar and browser bars, so you see exactly how much room your layout has on a phone, not the full screen height.
 >
 > THE BROWSER AROUND THE PAGE
-> Pick Safari, Chrome, Firefox or Zen per device. view-sim draws that browser's bars and tabs and sends its user agent, so you see what your users see.
+> Choose the browser interface for each device. view-sim draws that browser's bars and tabs and sends its user agent, so you see what your users see.
 >
 > FEELS LIKE A PHONE
 > Mobile user agents, touch events, drag-to-scroll and hidden scrollbars on phones and tablets. Navigate on one device and the others follow.
@@ -27,7 +27,7 @@ Copy-paste text for the Chrome Web Store, Firefox Add-ons (AMO) and Microsoft Ed
 > Save a PNG of the device with its frame, the screen with its bars, or only the page, on a transparent background. Ready for docs, slides and store pages.
 >
 > FOR AI AGENTS
-> An optional, open-source MCP server (npx view-sim-mcp) lets Claude Code and other agents open pages on devices and take screenshots. It runs on your computer only.
+> An optional, open-source MCP server lets AI coding agents open pages on devices and take screenshots. It runs on your computer only.
 >
 > PRIVATE BY DESIGN
 > No accounts, no analytics, no data collection. view-sim asks for access to a site only when you turn it on for that site.
