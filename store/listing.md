@@ -77,7 +77,7 @@ Upload the zip at https://chrome.google.com/webstore/devconsole (one-time $5 dev
 Submit at https://addons.mozilla.org/developers/addon/submit/ or sign from the command line:
 
 ```bash
-npx web-ext@8 sign --source-dir extension --channel listed --api-key "$AMO_JWT_ISSUER" --api-secret "$AMO_JWT_SECRET"
+npx web-ext@8 sign --source-dir extension --channel listed --amo-metadata store/amo-metadata.json --api-key "$AMO_JWT_ISSUER" --api-secret "$AMO_JWT_SECRET"
 ```
 
 (API keys: https://addons.mozilla.org/developers/addon/api/key/.)

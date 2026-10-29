@@ -1,0 +1,24 @@
+{
+  "summary": {
+    "en-US": "See your site on iPhone, Pixel, iPad, MacBook and big displays side by side, in Safari, Chrome, Firefox or Zen, with PNG screenshots."
+  },
+  "description": {
+    "en-US": "view-sim shows any website on real device sizes, side by side, right inside the browser you already use, with your logins, extensions and dev tools.\n\nDEVICES\niPhone 15 Pro, 15 Pro Max, 13 mini and SE · Pixel 8 · Galaxy S23 · iPad mini · iPad Pro 11\" · MacBook Pro 14\" and 16\" · iMac 24\" · Dell UltraSharp 40\" ultrawide. Each device gets the page area that's really left after its status bar and browser bars, so iPhone 15 Pro in Safari is 393 × 659, just like the phone.\n\nTHE BROWSER AROUND THE PAGE\nPick Safari, Chrome, Firefox or Zen per device. view-sim draws that browser's bars and tabs and sends its user agent, so you see what your users see.\n\nFEELS LIKE A PHONE\nMobile user agents, touch events, drag-to-scroll and hidden scrollbars on phones and tablets. Navigate on one device and the others follow.\n\nTRANSPARENT SCREENSHOTS\nSave a PNG of the device with its frame, the screen with its bars, or only the page, on a transparent background. Ready for docs, slides and store pages.\n\nFOR AI AGENTS\nAn optional, open-source MCP server (npx view-sim-mcp) lets Claude Code and other agents open pages on devices and take screenshots. It runs on your computer only.\n\nPRIVATE BY DESIGN\nNo accounts, no analytics, no data collection. view-sim asks for access to a site only when you turn it on for that site.\n\nFree and open source (MIT): https://github.com/itelo/view-sim"
+  },
+  "categories": {
+    "firefox": [
+      "web-development"
+    ]
+  },
+  "homepage": {
+    "en-US": "https://github.com/itelo/view-sim"
+  },
+  "support_url": {
+    "en-US": "https://github.com/itelo/view-sim/issues"
+  },
+  "contributions_url": "https://github.com/sponsors/itelo",
+  "version": {
+    "license": "MIT",
+    "approval_notes": "No build step: the uploaded files are the source. To try it, open any http(s) site, click the toolbar button and turn on \"Show in the simulator\"; the add-on asks for access to that site only. The background page connects to ws://127.0.0.1:47820 only when the user enables the MCP bridge on the settings page; it is a local server the user runs themselves (https://www.npmjs.com/package/view-sim-mcp)."
+  }
+}
