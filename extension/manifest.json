@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "view-sim",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Preview any website inside phone and tablet frames, side by side, with mobile user agents and touch emulation.",
   "minimum_chrome_version": "111",
   "action": {
@@ -29,6 +29,7 @@
     ]
   },
   "permissions": [
+    "activeTab",
     "storage",
     "scripting",
     "declarativeNetRequest",
