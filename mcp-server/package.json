@@ -1,6 +1,6 @@
 {
   "name": "view-sim-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "mcpName": "io.github.itelo/view-sim",
   "description": "MCP server for view-sim: drives the browser extension, or renders devices headlessly with Playwright.",
   "license": "MIT",
