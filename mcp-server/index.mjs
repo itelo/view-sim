@@ -163,6 +163,15 @@ const deviceEntryInput = z.union([
     landscape: z.boolean().optional(),
   }),
 ]);
+const actionInput = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("click"), selector: z.string() }),
+  z.object({ type: z.literal("hover"), selector: z.string() }),
+  z.object({ type: z.literal("fill"), selector: z.string(), text: z.string() }),
+  z.object({ type: z.literal("press"), key: z.string().describe("e.g. Enter, Escape, ArrowDown"), selector: z.string().optional().describe("Element to focus first; omit to press on the page") }),
+  z.object({ type: z.literal("wait_for"), selector: z.string().describe("Waits until this element is visible") }),
+  z.object({ type: z.literal("scroll_to"), selector: z.string() }),
+  z.object({ type: z.literal("wait"), ms: z.number().int().min(0).max(30_000) }),
+]);
 const optionsInput = {
   zoom: z.enum(["fit", "0.5", "0.75", "1"]).optional().describe("How large devices are drawn on screen"),
   frame: z.boolean().optional().describe("Draw device bezels, status bars and browser UI"),
@@ -276,7 +285,7 @@ server.registerTool(
   {
     title: "Headless screenshot",
     description:
-      "Screenshots a URL on simulated devices without any browser window or the extension, using Playwright with real device emulation (viewport, pixel ratio, touch, mobile mode, user agent). Safari devices render in WebKit, the others in Chromium. 'device' and 'screen' images have a transparent background. Pages behind a login need storage_state.",
+      "Screenshots a URL on simulated devices without any browser window or the extension, using Playwright with real device emulation (viewport, pixel ratio, touch, mobile mode, user agent). Safari devices render in WebKit, the others in Chromium. The page can be set up first: dark mode, hidden elements, extra CSS, and steps such as clicks; selectors are Playwright selectors. 'device' and 'screen' images have a transparent background. Pages behind a login need storage_state.",
     inputSchema: {
       url: z.string().url(),
       devices: z.array(deviceEntryInput).min(1).optional().default(["iphone-15-pro"]),
@@ -287,10 +296,23 @@ server.registerTool(
       wait_ms: z.number().int().min(0).max(30_000).optional().default(800).describe("Extra time after load, for animations and late content"),
       engine: z.enum(["auto", "chromium", "webkit"]).optional().default("auto"),
       storage_state: z.string().optional().describe("Path to a Playwright storage-state JSON (cookies and localStorage) for signed-in pages"),
+      color_scheme: z.enum(["light", "dark"]).optional().describe("prefers-color-scheme the page sees; omit for the browser default (light)"),
+      reduced_motion: z.enum(["reduce", "no-preference"]).optional().describe("prefers-reduced-motion the page sees; 'reduce' settles many animations before capture"),
+      hide: z.array(z.string()).optional().default([]).describe("CSS selectors to hide before capture, e.g. cookie banners or chat widgets"),
+      css: z.string().optional().describe("Extra CSS injected into the page before capture"),
+      actions: z
+        .array(actionInput)
+        .optional()
+        .default([])
+        .describe("Steps run in order after load and before capture, e.g. open a menu, fill a field or hover a button"),
+      selector: z
+        .string()
+        .optional()
+        .describe("Selector (CSS, or Playwright extras such as :visible and :has-text()) of an element. viewport mode captures only that element; device and screen modes scroll it to the top of the screen"),
       save_dir: z.string().optional().describe("Also write the PNGs to this directory and return their paths"),
     },
   },
-  async ({ url, devices, mode, frame, full_page, max_width, wait_ms, engine, storage_state, save_dir }) => {
+  async ({ url, devices, mode, frame, full_page, max_width, wait_ms, engine, storage_state, color_scheme, reduced_motion, hide, css, actions, selector, save_dir }) => {
     const content = [];
     for (const device of devices) {
       const image = await headlessScreenshot({
@@ -303,9 +325,16 @@ server.registerTool(
         waitMs: wait_ms,
         engine,
         storageState: storage_state,
+        colorScheme: color_scheme,
+        reducedMotion: reduced_motion,
+        hide,
+        css,
+        actions,
+        selector,
       });
       const savedPath = save_dir == null ? null : await savePng(save_dir, image, mode);
-      const label = `${image.name} · ${image.browser} (${image.engine}) · ${mode} · ${image.width}×${image.height}`;
+      let label = `${image.name} · ${image.browser} (${image.engine}) · ${mode} · ${image.width}×${image.height}`;
+      if (image.note) label += `\nnote: ${image.note}`;
       content.push({ type: "text", text: savedPath == null ? label : `${label}\nsaved to ${savedPath}` });
       content.push({ type: "image", data: image.data, mimeType: image.mimeType });
     }

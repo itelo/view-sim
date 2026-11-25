@@ -106,6 +106,21 @@ npx -y playwright@1.64.1 install chromium webkit
 
 Headless pages start signed out. For pages behind a login, pass `storage_state`: a Playwright storage-state JSON file with the cookies and localStorage to use.
 
+The page can be set up before it is captured:
+
+| Option | What it does |
+| --- | --- |
+| `color_scheme` | `light` or `dark`: what `prefers-color-scheme` reports to the page |
+| `reduced_motion` | `reduce` makes `prefers-reduced-motion` match, which settles many animations |
+| `hide` | CSS selectors to hide, such as cookie banners and chat widgets |
+| `css` | Extra CSS to inject. It is added as a constructed stylesheet, so the page's CSP can't block it |
+| `actions` | Steps run in order after load: `click`, `hover`, `fill`, `press`, `wait_for`, `scroll_to` and `wait`, e.g. `[{"type":"click","selector":"button:has-text('Menu')"}]`. A failing step stops the shot and says which step failed |
+| `selector` | In `viewport` mode, captures only that element. In `device` and `screen` modes, scrolls it to the top of the screen first |
+
+Selectors are Playwright selectors, so CSS works, and so do `:visible`, `:has-text("…")` and `text=…`.
+
+If WebKit isn't installed, Safari devices fall back to Chromium and the result says so.
+
 ### Transparent backgrounds
 
 `device` and `screen` images are PNGs with a transparent background, from both tools. The headless renderer draws on a transparent page. The extension captures the device twice, on black and on white, and works out each pixel's transparency from the difference, so rounded corners and anti-aliased edges stay clean. `viewport` images are the page itself, so they have no transparent areas.
