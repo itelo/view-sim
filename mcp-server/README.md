@@ -1,6 +1,6 @@
 # view-sim-mcp
 
-MCP server for [view-sim](https://github.com/itelo/view-sim): open sites on phones, tablets, MacBooks and big displays, navigate and take transparent PNG screenshots, either through the view-sim browser extension or headlessly with Playwright.
+MCP server for [view-sim](https://github.com/itelo/view-sim): open sites on phones, tablets, MacBooks and big displays, navigate and take transparent PNG screenshots, either through the view-sim browser extension or headlessly with Playwright. It can also frame screenshots taken by other tools, such as Playwright MCP, in a device.
 
 ```bash
 claude mcp add view-sim -- npx -y view-sim-mcp
