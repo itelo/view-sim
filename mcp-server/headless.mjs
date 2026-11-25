@@ -57,7 +57,24 @@ export function normalizeDeviceEntry(entry) {
 /**
  * @returns {Promise<{ mimeType: string, data: string, width: number, height: number, device: string, name: string, browser: string, engine: string, title: string }>}
  */
-export async function headlessScreenshot({ url, device: deviceEntry, mode = "device", frame = true, maxWidth = 1600, fullPage = false, waitMs = 800, storageState, engine = "auto", route }) {
+export async function headlessScreenshot({
+  url,
+  device: deviceEntry,
+  mode = "device",
+  frame = true,
+  maxWidth = 1600,
+  fullPage = false,
+  waitMs = 800,
+  storageState,
+  engine = "auto",
+  route,
+  colorScheme,
+  reducedMotion,
+  hide = [],
+  css,
+  actions = [],
+  selector,
+}) {
   const entry = normalizeDeviceEntry(deviceEntry);
   const framed = mode === "viewport" ? frame : true;
 
@@ -78,7 +95,12 @@ export async function headlessScreenshot({ url, device: deviceEntry, mode = "dev
     storageState,
     waitMs,
     route,
+    styles: pageStyles({ hide, css }),
+    actions,
+    selector,
     contextOptions: {
+      ...(colorScheme ? { colorScheme } : {}),
+      ...(reducedMotion ? { reducedMotion } : {}),
       viewport: geometry.viewport,
       screen: geometry.screen,
       // A page-only shot is the final image, so it is taken at the output scale directly.
@@ -89,9 +111,16 @@ export async function headlessScreenshot({ url, device: deviceEntry, mode = "dev
   });
 
   try {
+    if (mode === "viewport" && selector != null) {
+      // Only the element: its own size, not the viewport's.
+      const element = site.page.locator(selector).first();
+      const box = await element.boundingBox();
+      const shot = await element.screenshot({ type: "png" });
+      return describeImage(shot, outputScale, geometry, entry, siteEngine, site.title, { clip: box });
+    }
     const shot = await site.page.screenshot({ type: "png", fullPage: mode === "viewport" && fullPage });
     if (mode === "viewport") {
-      return describeImage(shot, outputScale, geometry, entry, siteEngine.name, site.title, { fullPage });
+      return describeImage(shot, outputScale, geometry, entry, siteEngine, site.title, { fullPage });
     }
 
     // 3. Draw the device around the screenshot and capture it on a transparent page.
@@ -103,7 +132,7 @@ export async function headlessScreenshot({ url, device: deviceEntry, mode = "dev
       );
       const clip = await final.page.evaluate((captureMode) => window.__mfsimRender.rect(0, captureMode), mode);
       const image = await final.page.screenshot({ type: "png", clip, omitBackground: true });
-      return describeImage(image, outputScale, geometry, entry, siteEngine.name, site.title, { clip });
+      return describeImage(image, outputScale, geometry, entry, siteEngine, site.title, { clip });
     } finally {
       await final.context.close();
     }
@@ -135,13 +164,15 @@ async function openRenderPage({ entry, url, mode, frame, deviceScaleFactor, size
   return { context, page };
 }
 
-async function loadSite({ url, engine, storageState, waitMs, route, contextOptions }) {
+async function loadSite({ url, engine, storageState, waitMs, route, styles, actions = [], selector, contextOptions }) {
   let browser;
   try {
     browser = await launch(engine.name);
   } catch (error) {
     if (engine.name !== "webkit") throw error;
+    // Usually Playwright's WebKit isn't installed; say so instead of silently changing engines.
     engine.name = "chromium";
+    engine.fallback = "WebKit could not start, so this rendered in Chromium. Install it with: npx playwright install webkit";
     browser = await launch("chromium");
   }
   const context = await browser.newContext({ ...contextOptions, ...(storageState ? { storageState } : {}) });
@@ -150,6 +181,27 @@ async function loadSite({ url, engine, storageState, waitMs, route, contextOptio
   const page = await context.newPage();
   await page.goto(url, { waitUntil: "load", timeout: 60_000 });
   await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => {});
+  if (styles) await injectStyles(page, styles);
+  if (actions.length > 0) {
+    for (const [index, action] of actions.entries()) {
+      try {
+        await runAction(page, action);
+      } catch (error) {
+        throw new Error(`Action ${index + 1} (${action.type}) failed: ${error.message.split("\n")[0]}`);
+      }
+    }
+    // A click may have navigated, which drops the injected styles.
+    await page.waitForLoadState("load").catch(() => {});
+    if (styles) await injectStyles(page, styles);
+  }
+  if (selector != null) {
+    const element = page.locator(selector).first();
+    await element.waitFor({ state: "visible", timeout: 10_000 }).catch(() => {
+      throw new Error(`No visible element matches selector ${JSON.stringify(selector)}`);
+    });
+    // Put the element at the top of the screen, so a device shot shows it rather than the page's top.
+    await element.evaluate((node) => node.scrollIntoView({ block: "start", behavior: "instant" }));
+  }
   if (waitMs > 0) await page.waitForTimeout(waitMs);
   const details = await page.evaluate(() => ({
     title: document.title,
@@ -157,6 +209,55 @@ async function loadSite({ url, engine, storageState, waitMs, route, contextOptio
     themeColor: document.querySelector('meta[name="theme-color"]')?.getAttribute("content") ?? null,
   }));
   return { context, page, ...details };
+}
+
+/** CSS that hides elements such as cookie banners, plus any extra CSS. */
+function pageStyles({ hide = [], css }) {
+  const parts = [];
+  if (hide.length > 0) parts.push(`${hide.join(",\n")} { display: none !important; }`);
+  if (css) parts.push(css);
+  return parts.join("\n");
+}
+
+/**
+ * Adds CSS as a constructed stylesheet: unlike a <style> tag, the page's Content Security Policy
+ * can't block it.
+ */
+function injectStyles(page, styles) {
+  return page.evaluate((text) => {
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(text);
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+  }, styles);
+}
+
+const ACTION_TIMEOUT_MS = 10_000;
+
+/**
+ * Steps run on the page before it is captured.
+ * @param {import("playwright").Page} page
+ * @param {{ type: string, selector?: string, text?: string, key?: string, ms?: number }} action
+ */
+async function runAction(page, action) {
+  const target = () => page.locator(action.selector).first();
+  switch (action.type) {
+    case "click":
+      return target().click({ timeout: ACTION_TIMEOUT_MS });
+    case "hover":
+      return target().hover({ timeout: ACTION_TIMEOUT_MS });
+    case "fill":
+      return target().fill(action.text ?? "", { timeout: ACTION_TIMEOUT_MS });
+    case "press":
+      return action.selector ? target().press(action.key, { timeout: ACTION_TIMEOUT_MS }) : page.keyboard.press(action.key);
+    case "wait_for":
+      return target().waitFor({ state: "visible", timeout: ACTION_TIMEOUT_MS });
+    case "scroll_to":
+      return target().evaluate((node) => node.scrollIntoView({ block: "start", behavior: "instant" }));
+    case "wait":
+      return page.waitForTimeout(action.ms ?? 500);
+    default:
+      throw new Error(`Unknown action type ${JSON.stringify(action.type)}`);
+  }
 }
 
 function describeImage(buffer, scale, geometry, entry, engine, title, { clip, fullPage } = {}) {
@@ -172,7 +273,8 @@ function describeImage(buffer, scale, geometry, entry, engine, title, { clip, fu
     device: entry.id,
     name: geometry.name,
     browser: entry.browser,
-    engine,
+    engine: engine.name,
+    ...(engine.fallback ? { note: engine.fallback } : {}),
     title,
   };
 }
