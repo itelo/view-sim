@@ -6,11 +6,7 @@ MCP server for [view-sim](https://github.com/itelo/view-sim): open sites on phon
 claude mcp add view-sim -- npx -y view-sim-mcp
 ```
 
-Headless screenshots need Playwright's browsers once:
-
-```bash
-npx -y playwright@1.64.1 install chromium webkit
-```
+The first headless screenshot or frame downloads Playwright's Chromium (and WebKit for Safari devices) once, which can take a minute. Set `VIEW_SIM_NO_BROWSER_INSTALL=1` to turn that off and install them yourself with `npx -y playwright@1.64.1 install chromium webkit`.
 
 To let only view-sim's extension connect to the bridge, set `VIEW_SIM_EXTENSION_IDS` to its extension id (comma-separated for several browsers):
 

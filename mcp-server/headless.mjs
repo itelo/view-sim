@@ -1,7 +1,9 @@
 // Headless screenshots with Playwright: no browser window and no extension needed. The page is
 // rendered with real device emulation (viewport, pixel ratio, touch, mobile mode, UA), then the
 // extension's own simulator draws the device around it on a transparent page.
+import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import vm from "node:vm";
@@ -32,11 +34,51 @@ DESKTOP_USER_AGENTS.zen = DESKTOP_USER_AGENTS.firefox;
 const launched = new Map();
 function launch(engine) {
   if (!launched.has(engine)) {
-    const browser = (engine === "webkit" ? webkit : chromium).launch();
+    const browser = launchOrInstall(engine);
     browser.catch(() => launched.delete(engine));
     launched.set(engine, browser);
   }
   return launched.get(engine);
+}
+
+async function launchOrInstall(engine) {
+  const type = engine === "webkit" ? webkit : chromium;
+  try {
+    return await type.launch();
+  } catch (error) {
+    if (!isMissingBrowser(error) || process.env.VIEW_SIM_NO_BROWSER_INSTALL) throw error;
+  }
+  await installBrowser(engine);
+  return type.launch();
+}
+
+const isMissingBrowser = (error) => /Executable doesn't exist|playwright install/i.test(String(error?.message));
+
+const installs = new Map();
+/**
+ * Downloads Playwright's build of a browser the first time it is needed, with the Playwright
+ * version this package depends on, so nobody has to run `playwright install` by hand.
+ */
+function installBrowser(engine) {
+  if (!installs.has(engine)) {
+    const install = new Promise((resolve, reject) => {
+      const cli = path.join(path.dirname(createRequire(import.meta.url).resolve("playwright/package.json")), "cli.js");
+      console.error(`[view-sim] ${engine} isn't installed; downloading it once (this can take a minute)`);
+      // stdout carries the MCP protocol, so the installer's output goes to stderr.
+      const child = spawn(process.execPath, [cli, "install", engine], { stdio: ["ignore", process.stderr, process.stderr] });
+      child.on("error", reject);
+      child.on("exit", (code) =>
+        code === 0 ? resolve() : reject(new Error(`Installing ${engine} failed (exit ${code}). Run: npx -y playwright@${playwrightVersion()} install ${engine}`)),
+      );
+    });
+    install.catch(() => installs.delete(engine));
+    installs.set(engine, install);
+  }
+  return installs.get(engine);
+}
+
+function playwrightVersion() {
+  return createRequire(import.meta.url)("playwright/package.json").version;
 }
 
 export async function closeHeadless() {
@@ -243,9 +285,9 @@ async function loadSite({ url, engine, storageState, waitMs, route, styles, acti
     browser = await launch(engine.name);
   } catch (error) {
     if (engine.name !== "webkit") throw error;
-    // Usually Playwright's WebKit isn't installed; say so instead of silently changing engines.
+    // view-sim tries to install WebKit first; if it still can't start (e.g. missing system libraries), say so instead of silently changing engines.
     engine.name = "chromium";
-    engine.fallback = "WebKit could not start, so this rendered in Chromium. Install it with: npx playwright install webkit";
+    engine.fallback = `WebKit could not start (${String(error?.message).split("\n")[0]}), so this rendered in Chromium`;
     browser = await launch("chromium");
   }
   const context = await browser.newContext({ ...contextOptions, ...(storageState ? { storageState } : {}) });
