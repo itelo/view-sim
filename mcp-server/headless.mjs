@@ -124,21 +124,94 @@ export async function headlessScreenshot({
     }
 
     // 3. Draw the device around the screenshot and capture it on a transparent page.
-    const final = await openRenderPage({ entry, url, mode, frame: framed, deviceScaleFactor: outputScale, size: geometry.outer });
-    try {
-      await final.page.evaluate(
-        (page) => window.__mfsimRender.setPage(0, page),
-        { src: `data:image/png;base64,${shot.toString("base64")}`, url: site.url, title: site.title, themeColor: site.themeColor },
-      );
-      const clip = await final.page.evaluate((captureMode) => window.__mfsimRender.rect(0, captureMode), mode);
-      const image = await final.page.screenshot({ type: "png", clip, omitBackground: true });
-      return describeImage(image, outputScale, geometry, entry, siteEngine, site.title, { clip });
-    } finally {
-      await final.context.close();
-    }
+    const { image, clip } = await drawDevice({ entry, url, mode, geometry, scale: outputScale, shot, page: site });
+    return describeImage(image, outputScale, geometry, entry, siteEngine, site.title, { clip });
   } finally {
     await site.context.close();
   }
+}
+
+async function drawDevice({ entry, url, mode, geometry, scale, shot, page }) {
+  const final = await openRenderPage({ entry, url, mode, frame: true, deviceScaleFactor: scale, size: geometry.outer });
+  try {
+    await final.page.evaluate(
+      (details) => window.__mfsimRender.setPage(0, details),
+      { src: `data:image/png;base64,${shot.toString("base64")}`, url: page.url, title: page.title, themeColor: page.themeColor },
+    );
+    const clip = await final.page.evaluate((captureMode) => window.__mfsimRender.rect(0, captureMode), mode);
+    const image = await final.page.screenshot({ type: "png", clip, omitBackground: true });
+    return { image, clip };
+  } finally {
+    await final.context.close();
+  }
+}
+
+/** The page area a device leaves for the site, and how to emulate it, without loading any site. */
+export async function deviceViewport(deviceEntry) {
+  const entry = normalizeDeviceEntry(deviceEntry);
+  const probe = await openRenderPage({ entry, url: "https://example.com/", mode: "device", frame: true, deviceScaleFactor: 1 });
+  try {
+    const geometry = await probe.page.evaluate(() => window.__mfsimRender.state().devices[0]);
+    const isDesktop = geometry.os === "macos";
+    return {
+      device: entry.id,
+      name: geometry.name,
+      browser: entry.browser,
+      landscape: entry.landscape,
+      viewport: geometry.viewport,
+      screen: geometry.screen,
+      deviceScaleFactor: geometry.dpr,
+      userAgent: geometry.userAgent ?? DESKTOP_USER_AGENTS[entry.browser],
+      isMobile: !isDesktop,
+      hasTouch: !isDesktop,
+    };
+  } finally {
+    await probe.context.close();
+  }
+}
+
+/**
+ * Draws a device around a screenshot taken elsewhere, e.g. by Playwright MCP. The screenshot is
+ * fitted to the device's page width; a taller one is cut at the bottom, a shorter one is padded
+ * with `background`.
+ * @param {{ image: Buffer, device: string | object, mode?: "device" | "screen", maxWidth?: number, url?: string, title?: string, themeColor?: string, background?: string }} options
+ */
+export async function frameScreenshot({ image, device: deviceEntry, mode = "device", maxWidth = 1600, url = "", title = "", themeColor = null, background = "#ffffff" }) {
+  const entry = normalizeDeviceEntry(deviceEntry);
+  const probe = await openRenderPage({ entry, url: url || "https://example.com/", mode, frame: true, deviceScaleFactor: 1 });
+  const geometry = await probe.page.evaluate(() => window.__mfsimRender.state().devices[0]);
+  await probe.context.close();
+
+  const outputCssWidth = mode === "screen" ? geometry.screen.width : geometry.outer.width + 8;
+  const outputScale = Math.min(geometry.dpr, maxWidth / outputCssWidth);
+  const imageWidth = image.readUInt32BE(16);
+  const imageHeight = image.readUInt32BE(20);
+
+  // Fit the screenshot to exactly the device's page area, at the screenshot's own resolution.
+  const browser = await launch("chromium");
+  const fitScale = Math.max(1, imageWidth / geometry.viewport.width);
+  const context = await browser.newContext({ viewport: geometry.viewport, deviceScaleFactor: fitScale });
+  let shot;
+  try {
+    const page = await context.newPage();
+    await page.setContent(
+      `<style>html,body{margin:0;background:${background};overflow:hidden}img{display:block;width:100%;height:auto}</style><img>`,
+    );
+    await page.evaluate(async (src) => {
+      const img = document.querySelector("img");
+      img.src = src;
+      await img.decode();
+    }, `data:image/png;base64,${image.toString("base64")}`);
+    shot = await page.screenshot({ type: "png" });
+  } finally {
+    await context.close();
+  }
+
+  const { image: framed, clip } = await drawDevice({ entry, url: url || "https://example.com/", mode, geometry, scale: outputScale, shot, page: { url, title, themeColor } });
+  return {
+    ...describeImage(framed, outputScale, geometry, entry, { name: "input" }, title, { clip }),
+    input: { width: imageWidth, height: imageHeight, expectedCssSize: geometry.viewport, fitted: Math.abs(imageWidth / imageHeight - geometry.viewport.width / geometry.viewport.height) > 0.01 },
+  };
 }
 
 function pickEngine(browser, requested) {
