@@ -178,7 +178,7 @@ const optionsInput = {
   sync: z.boolean().optional().describe("Navigate every device when one of them navigates"),
 };
 
-const server = new McpServer({ name: "view-sim", version: "1.1.0" });
+const server = new McpServer({ name: "view-sim", version: "1.1.1" });
 
 server.registerTool(
   "view_sim_status",

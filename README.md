@@ -98,13 +98,13 @@ Tools:
 
 ### Headless screenshots
 
-`view_sim_headless_screenshot` doesn't need the extension or a browser window. It loads the page with Playwright using real device emulation: viewport, pixel ratio, touch, mobile mode and user agent, so CSS `pointer: coarse` and the viewport meta tag behave as they do on a phone. Then it draws the device around the result with the same simulator code and CSS the extension uses. Safari devices render in WebKit; the other browsers render in Chromium, with their own interface and user agent. It needs Playwright's browsers once:
+`view_sim_headless_screenshot` doesn't need the extension or a browser window. It loads the page with Playwright using real device emulation: viewport, pixel ratio, touch, mobile mode and user agent, so CSS `pointer: coarse` and the viewport meta tag behave as they do on a phone. Then it draws the device around the result with the same simulator code and CSS the extension uses. Safari devices render in WebKit; the other browsers render in Chromium, with their own interface and user agent. The first time it needs Chromium or WebKit, view-sim downloads Playwright's build of it, once; this can take a minute. To install them ahead of time instead:
 
 ```bash
 npx -y playwright@1.64.1 install chromium webkit
 ```
 
-(From a clone: `cd mcp-server && npm run install-browsers`.)
+(From a clone: `cd mcp-server && npm run install-browsers`.) Set `VIEW_SIM_NO_BROWSER_INSTALL=1` to turn the automatic download off.
 
 Headless pages start signed out. For pages behind a login, pass `storage_state`: a Playwright storage-state JSON file with the cookies and localStorage to use.
 
