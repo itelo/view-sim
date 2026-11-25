@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // MCP server for the view-sim extension. MCP clients talk to it over stdio; the extension's
 // background page dials in over a localhost WebSocket and executes the commands.
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { WebSocketServer } from "ws";
 import { z } from "zod";
-import { closeHeadless, headlessScreenshot } from "./headless.mjs";
+import { closeHeadless, deviceViewport, frameScreenshot, headlessScreenshot } from "./headless.mjs";
 
 const PORT = Number(process.env.VIEW_SIM_PORT ?? 47820);
 // The extension retries every 30s (an alarm), so a fresh server may wait up to that long.
@@ -335,6 +335,63 @@ server.registerTool(
       const savedPath = save_dir == null ? null : await savePng(save_dir, image, mode);
       let label = `${image.name} · ${image.browser} (${image.engine}) · ${mode} · ${image.width}×${image.height}`;
       if (image.note) label += `\nnote: ${image.note}`;
+      content.push({ type: "text", text: savedPath == null ? label : `${label}\nsaved to ${savedPath}` });
+      content.push({ type: "image", data: image.data, mimeType: image.mimeType });
+    }
+    return { content };
+  },
+);
+
+server.registerTool(
+  "view_sim_device_viewport",
+  {
+    title: "Device page size",
+    description:
+      "The page area each device leaves for the site once its status bar and browser bars are drawn, with the pixel ratio and user agent to emulate. Use it to size another browser (e.g. Playwright MCP's browser_resize) before taking a screenshot to pass to view_sim_frame. Needs no extension.",
+    inputSchema: {
+      devices: z.array(deviceEntryInput).min(1),
+    },
+  },
+  async ({ devices }) => {
+    const results = [];
+    for (const device of devices) results.push(await deviceViewport(device));
+    return asJson(results);
+  },
+);
+
+server.registerTool(
+  "view_sim_frame",
+  {
+    title: "Frame a screenshot",
+    description:
+      "Draws a device (bezel, status bar and browser bars) around a PNG screenshot taken elsewhere, such as by Playwright MCP. Take the screenshot at the size view_sim_device_viewport gives for that device; a different shape is fitted to the device's width and cut or padded at the bottom. The result has a transparent background. Needs no extension.",
+    inputSchema: {
+      image_path: z.string().describe("Path to the PNG screenshot of the page (the viewport only, not the whole window)"),
+      devices: z.array(deviceEntryInput).min(1).optional().default(["iphone-15-pro"]).describe("One framed image per device"),
+      mode: z.enum(["device", "screen"]).optional().default("device").describe("device: with bezel and stand; screen: display with status and browser bars"),
+      url: z.string().optional().describe("Shown in the address bar"),
+      title: z.string().optional().describe("Shown on the tab, on desktop browsers"),
+      theme_color: z.string().optional().describe("The page's theme-color, which tints Safari's bars on phones"),
+      background: z.string().optional().default("#ffffff").describe("Fills the page area below a screenshot that is too short"),
+      max_width: z.number().int().min(200).max(8192).optional().default(1600),
+      save_dir: z.string().optional().describe("Also write the PNGs to this directory and return their paths"),
+    },
+  },
+  async ({ image_path, devices, mode, url, title, theme_color, background, max_width, save_dir }) => {
+    const input = await readFile(image_path);
+    if (input.subarray(1, 4).toString() !== "PNG") throw new Error(`${image_path} is not a PNG`);
+    const content = [];
+    for (const device of devices) {
+      const image = await frameScreenshot({ image: input, device, mode, maxWidth: max_width, url, title, themeColor: theme_color, background });
+      const savedPath = save_dir == null ? null : await savePng(save_dir, image, `framed-${mode}`);
+      let label = `${image.name} · ${image.browser} · ${mode} · ${image.width}×${image.height}`;
+      if (image.input.fitted) {
+        const { width, height } = image.input.expectedCssSize;
+        label += `\nnote: the screenshot (${image.input.width}×${image.input.height}) isn't ${width}×${height} or a multiple of it, so it was fitted to the width and cut or padded at the bottom`;
+      }
+      if (image.input.width < image.input.expectedCssSize.width * Math.min(image.scale, 2) * 0.9) {
+        label += `\nnote: the screenshot is ${image.input.width}px wide, less than this image needs, so the page looks soft; take it at the device's pixel ratio (view_sim_device_viewport gives it)`;
+      }
       content.push({ type: "text", text: savedPath == null ? label : `${label}\nsaved to ${savedPath}` });
       content.push({ type: "image", data: image.data, mimeType: image.mimeType });
     }

@@ -92,6 +92,8 @@ Tools:
 | `view_sim_set_options` | Sets zoom, frame and sync |
 | `view_sim_screenshot` | Captures one device or all of them from the extension's tab, as `device`, `screen` or `viewport`; returns images and can also save PNGs with `save_dir` |
 | `view_sim_headless_screenshot` | Renders a URL on devices with no browser window and no extension (see below) |
+| `view_sim_device_viewport` | Gives a device's page size, pixel ratio and user agent, to size another browser (see below) |
+| `view_sim_frame` | Draws a device around a PNG screenshot taken elsewhere (see below) |
 | `view_sim_turn_off` | Turns the simulator off for a hostname |
 
 ### Headless screenshots
@@ -120,6 +122,16 @@ The page can be set up before it is captured:
 Selectors are Playwright selectors, so CSS works, and so do `:visible`, `:has-text("…")` and `text=…`.
 
 If WebKit isn't installed, Safari devices fall back to Chromium and the result says so.
+
+### Framing your own screenshots
+
+To drive the page with another tool, such as [Playwright MCP](https://github.com/microsoft/playwright-mcp), and let view-sim only draw the device:
+
+1. `view_sim_device_viewport` gives each device's page size, pixel ratio and user agent. Set the other browser to that size and pixel ratio. Playwright's own `iPhone 15 Pro` device matches view-sim's.
+2. Take a screenshot of the viewport only, as a PNG.
+3. `view_sim_frame` with `image_path` and the same device draws the bezel, status bar and browser bars around it, with a transparent background. `url` and `title` fill the address bar and tab.
+
+A screenshot of a different shape is fitted to the device's width and cut or padded at the bottom, and the result says so. It also says when the screenshot is too small to look sharp. Neither tool needs the extension.
 
 ### Transparent backgrounds
 
